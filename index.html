@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>献给你的那句话</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+    /* --- 基础设置 --- */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #5d5d5d;
+      background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 动态流光背景层 (最底层) */
+    .bg-gradient-layer {
+      position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,230,230,0.4) 0%, rgba(230,240,255,0.4) 50%, rgba(240,255,240,0.4) 100%);
+      opacity: 0.6; z-index: -5;
+      animation: breatheBg 15s infinite alternate ease-in-out;
+      will-change: transform; 
+    }
+    @keyframes breatheBg {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-5%, -5%) scale(1.05); }
+    }
+
+    /* 噪点纹理 */
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+      z-index: -4; opacity: 0.6;
+    }
+
+    /* 全屏图片平铺层 */
+    .bg-pattern-layer {
+      position: fixed; inset: 0; z-index: -3;
+      background-image: url('bg-deco.png'); 
+      background-repeat: repeat; 
+      background-size: 200px auto; 
+      opacity: 0.15; filter: saturate(0.8); pointer-events: none;
+    }
+
+    /* --- 柔焦漂浮光斑 (已优化性能) --- */
+    .floating-blob {
+      position: fixed; border-radius: 50%; 
+      filter: blur(25px); 
+      z-index: -2; opacity: 0.3; 
+      animation: floatAround infinite linear; pointer-events: none;
+      will-change: transform; 
+    }
+    .blob-1 { top: 10%; left: 5%; width: 250px; height: 250px; background: rgba(255, 154, 158, 0.5); animation-duration: 25s; }
+    .blob-2 { bottom: 20%; right: 10%; width: 300px; height: 300px; background: rgba(161, 196, 253, 0.5); animation-duration: 35s; animation-direction: reverse; }
+    .blob-3 { top: 40%; right: 30%; width: 180px; height: 180px; background: rgba(251, 194, 235, 0.4); animation-duration: 20s; animation-delay: -5s;}
+
+    @keyframes floatAround {
+      0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+      33% { transform: translate(40px, -30px) rotate(120deg) scale(1.1); }
+      66% { transform: translate(-20px, 50px) rotate(240deg) scale(0.9); }
+      100% { transform: translate(0, 0) rotate(360deg) scale(1); }
+    }
+
+    /* --- 主容器 --- */
+    .container {
+      width: 100%; max-width: 900px; padding: 40px 24px 60px;
+      display: flex; flex-direction: column; flex: 1; position: relative; z-index: 2;
+    }
+
+    /* --- 头部 --- */
+    .header { margin-bottom: 32px; text-align: left; animation: fadeInDown 0.8s ease-out; position: relative; z-index: 5; }
+    
+    .title { 
+      font-size: 36px; font-weight: 700; color: #2c3e50; 
+      letter-spacing: 2px; margin-bottom: 8px; 
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.05); 
+    }
+    .subtitle { font-size: 14px; color: #8e8e8e; font-weight: 300; letter-spacing: 1px; }
+
+    /* 左右布局容器 */
+    .main-layout { display: flex; align-items: center; justify-content: center; gap: 40px; flex: 1; }
+
+    /* 两侧竖排文字 */
+    .side-text {
+      writing-mode: vertical-rl; text-orientation: mixed;
+      font-family: "Georgia", "Songti SC", serif; 
+      color: #8c7767; font-size: 18px; letter-spacing: 8px; opacity: 0.7; font-weight: 500;
+      height: fit-content; border-right: 1px solid rgba(140, 119, 103, 0.2); 
+      padding-right: 15px; animation: fadeIn 1.5s ease;
+    }
+    .side-text.right { border-right: none; border-left: 1px solid rgba(140, 119, 103, 0.2); padding-right: 0; padding-left: 15px; }
+
+    /* 手机端隐藏两侧文字 */
+    @media (max-width: 850px) {
+      .side-text { display: none; }
+      .container { max-width: 680px; }
+    }
+
+    /* --- 卡片区域 (已优化性能) --- */
+    .card-wrapper { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 480px; }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.94); 
+      border-radius: 24px; padding: 32px;
+      box-shadow: 0 15px 35px -5px rgba(50, 50, 93, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(255, 255, 255, 1); 
+      position: relative; 
+      transition: all 0.3s ease; 
+      margin-bottom: 24px;
+      will-change: transform, opacity; 
+    }
+    .card::after { content: ""; position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 60px; height: 16px; background: rgba(230, 230, 230, 0.6); border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); opacity: 0.8; }
+    
+    .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .daily-tag { font-size: 12px; color: #fff; padding: 4px 12px; border-radius: 12px; background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); box-shadow: 0 2px 6px rgba(161, 196, 253, 0.4); font-weight: 500; }
+    .category { font-size: 13px; color: #b08a68; font-weight: 500; }
+
+    .content-area { min-height: 140px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+    .quote-mark { font-family: "Georgia", serif; font-size: 48px; color: #e0e0e0; position: absolute; top: -10px; left: -10px; line-height: 1; opacity: 0.6; }
+    .content { font-size: 19px; line-height: 1.8; color: #333; text-align: left; position: relative; z-index: 1; font-weight: 400; padding-left: 12px; }
+
+    /* --- 按钮 --- */
+    .btn-group { display: flex; gap: 16px; margin-top: 32px; flex-wrap: wrap; }
+    .btn { padding: 12px 24px; border-radius: 50px; border: none; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; outline: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-main { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); color: white; box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4); flex: 1; }
+    .btn-main:active { transform: scale(0.96); }
+    .btn-secondary { background: white; color: #888; border: 1px solid #eee; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .btn-secondary:active { background: #f9f9f9; transform: scale(0.96); }
+    .btn-breath { width: 100%; background: rgba(161, 196, 253, 0.1); color: #7fa9e6; font-size: 13px; padding: 10px; margin-top: 10px; border: 1px dashed #a1c4fd; }
+
+    /* --- ✨✨✨ 底部文字样式优化 (放大) ✨✨✨ --- */
+    .footer { 
+      margin-top: auto; 
+      font-size: 15px; /* 从12px改大到15px */
+      color: #888;     /* 颜色稍微加深一点点，更清晰 */
+      text-align: center; 
+      padding-top: 20px; 
+      line-height: 1.6;
+    }
+    .hidden-love { font-size: 12px; color: #ddd; margin-top: 6px; }
+    
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 深呼吸遮罩 */
+    .breath-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .breath-circle { width: 100px; height: 100px; border-radius: 50%; background: #a1c4fd; opacity: 0.5; animation: deepBreath 4s infinite ease-in-out; margin-bottom: 20px; }
+    .breath-text { font-size: 16px; color: #555; animation: textFade 4s infinite ease-in-out; }
+    @keyframes deepBreath { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.5); opacity: 0.7; } }
+    @keyframes textFade { 0%, 100% { content: "吸气..."; opacity: 0.5; } 50% { content: "呼气..."; opacity: 1; } }
+
+    @media (max-width: 480px) { .title { font-size: 24px; } .card { padding: 24px 20px; } .content { font-size: 18px; } }
+  </style>
+</head>
+<body>
+
+  <div class="bg-gradient-layer"></div>
+  <div class="bg-pattern-layer"></div>
+  
+  <div class="floating-blob blob-1"></div>
+  <div class="floating-blob blob-2"></div>
+  <div class="floating-blob blob-3"></div>
+
+  <div class="breath-overlay" id="breathOverlay" onclick="closeBreath()">
+    <div class="breath-circle"></div>
+    <div class="breath-text" id="breathText">慢慢吸气...</div>
+    <div style="font-size:12px; color:#999; margin-top:30px;">(点击屏幕结束)</div>
+  </div>
+
+  <div class="container">
+    <header class="header">
+      <div class="title">土地神的宣言</div>
+      <div class="subtitle">致蔡雯丽 每一个瞬间每一种心情</div>
+    </header>
+
+    <div class="main-layout">
+      <div class="side-text left">
+        允许一切如其所是
+      </div>
+
+      <div class="card-wrapper">
+        <div class="card" id="card">
+          <div class="meta-row">
+            <span class="category" id="category"></span>
+            <span class="daily-tag" id="dailyTag"></span>
+          </div>
+          <div class="content-area">
+            <div class="quote-mark">“</div>
+            <div class="content" id="content"></div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-main" onclick="changeMessage(true)"><span>✨ 换一句</span></button>
+            <button class="btn btn-secondary" onclick="endToday()"><span>👋 先这样</span></button>
+          </div>
+          <button class="btn btn-breath" onclick="startBreath()">💨 觉得心慌？点这里一起深呼吸</button>
+        </div>
+      </div>
+
+      <div class="side-text right">
+        你本就值得所有美好
+      </div>
+    </div>
+
+    <div class="footer">
+      这些话是专门留给你的，什么时候来都在。<br>
+      <div class="hidden-love">Made with ❤ for you</div>
+    </div>
+  </div>
+
+  <script>
+    /* --- 文案和标签配置 --- */
+    const dailyTags = ["🌸 今日宜：放过自己", "🍵 今日宜：喝杯温水", "💤 今日宜：早点睡觉", "⛅ 今日宜：发一会儿呆", "✨ 今日宜：找我聊天", "🎈 今日宜：相信直觉", "🍪 今日宜：吃点甜的"];
+    
+    /* 您的文案库 (已包含之前的所有内容) */
+    const messages = [
+      { id: 1, category: "我在呢", text: "我在，一直都在。" },
+      { id: 2, category: "我在呢", text: "不用回头，我就在你伸手够得着的地方。" },
+      { id: 3, category: "我在呢", text: "如果不开心，就把我当成树洞吧，我嘴很严。" },
+      { id: 4, category: "我在呢", text: "没什么特别的事，就是想告诉你，我想你了。" },
+      { id: 7, category: "我在呢", text: "如果你不想说话，那我们就一起安静一会儿。" },
+      { id: 8, category: "我在呢", text: "不管你做什么决定，我都站在你这边，无条件。" },
+      { id: 10, category: "我在呢", text: "你往前走就好，我负责帮你守着后方。" },
+      { id: 11, category: "我在呢", text: "想我了就找我，不想找也没关系，我等着。" },
+      { id: 12, category: "我在呢", text: "任何时候，想躲起来的时候，我都是你的安全屋。" },
+      { id: 13, category: "我在呢", text: "我或许给不了完美的建议，但我有绝对的耐心。" },
+      { id: 14, category: "我在呢", text: "你不需要向我解释什么，我都懂。" },
+      { id: 15, category: "我在呢", text: "把烦恼分一半给我，快乐留给你自己。" },
+      { id: 16, category: "我在呢", text: "无论你在哪里，我的雷达都指向你。" },
+      { id: 17, category: "我在呢", text: "你是自由的，而我是你永远的归处。" },
+      { id: 18, category: "我在呢", text: "我不需要你一直发光，暗淡的时候我也在。" },
+      { id: 19, category: "我在呢", text: "无论几点，只要你需要，我就有空。" },
+      { id: 20, category: "我在呢", text: "我会一直在这里，你可以反复向我确认。" },
+      { id: 23, category: "我时刻想着你", text: "刚刚路过花店，觉得那束花很像你。" },
+      { id: 24, category: "我时刻想着你", text: "今天的风很舒服，适合散步，也适合想你。" },
+      { id: 25, category: "我时刻想着你", text: "别忘了喝水，虽然是废话，但是是真心的。" },
+      { id: 26, category: "休息一下", text: "如果累了，就去洗个热水澡，把世界关在门外。" },
+      { id: 27, category: "休息一下", text: "周末去晒晒太阳吧，什么都不想的那种。" },
+      { id: 28, category: "我时刻想着你", text: "看到一个好笑的表情包，存下来发给你。" },
+      { id: 30, category: "我时刻想着你", text: "你的碎碎念，我觉得很有趣。" },
+      { id: 32, category: "我时刻想着你", text: "今天的云好可爱，像棉花糖，想摘给你。" },
+      { id: 33, category: "我时刻想着你", text: "生活总有缝隙，那是光照进来的地方，也是我挤进来的地方。" },
+      { id: 35, category: "我时刻想着你", text: "给你买了爱吃的零食，藏在口袋里了。" },
+      { id: 36, category: "我时刻想着你", text: "就算今天什么都没做，也是值得被爱的一天。" },
+      { id: 37, category: "休息一下", text: "被窝是世界上最安全的地方，快躲进去。" },
+      { id: 38, category: "我时刻想着你", text: "所有的烦恼，都留给明天再说吧。" },
+      { id: 39, category: "我时刻想着你", text: "只要你开心，我就觉得今天是个好日子。" },
+      { id: 41, category: "抱抱你", text: "辛苦了，虽然我知道你不会说。" },
+      { id: 42, category: "抱抱你", text: "我知道你心里有数，所以我不劝你，我只陪你。" },
+      { id: 43, category: "抱抱你", text: "你的沉默，我也听得懂。" },
+      { id: 44, category: "抱抱你", text: "你想做的事，尽管去做，搞砸了我帮你收场。" },
+      { id: 45, category: "抱抱你", text: "不需要刻意坚强，如果你想哭，借个肩膀给你。" },
+      { id: 47, category: "抱抱你", text: "你不用照顾我的情绪，在我这里，你优先。" },
+      { id: 48, category: "抱抱你", text: "我没觉得你敏感，我觉得你这是感知力强。" },
+      { id: 49, category: "抱抱你", text: "那些没说出口的话，我都收到了。" },
+      { id: 50, category: "抱抱你", text: "你不用改变什么，现在的你就很好。" },
+      { id: 51, category: "抱抱你", text: "我不问过程，我只在意你累不累。" },
+      { id: 52, category: "抱抱你", text: "你有你的计划，我有我的“守护计划”。" },
+      { id: 53, category: "抱抱你", text: "别怕麻烦我，被你麻烦，我很乐意。" },
+      { id: 54, category: "抱抱你", text: "你尽管去飞，累了记得我是陆地。" },
+      { id: 55, category: "抱抱你", text: "我不评判你的对错，我只关心你的心情。" },
+      { id: 56, category: "抱抱你", text: "哪怕全世界都不理解你，我也会站在你身边。" },
+      { id: 59, category: "抱抱你", text: "无论你变成什么样，我对你的看法都不会变。" },
+      { id: 60, category: "抱抱你", text: "我知道你可以一个人搞定，但两个人会轻松一点点。" },
+      { id: 61, category: "关于未来", text: "未来太远了，我们先约好明天见。" },
+      { id: 63, category: "关于未来", text: "你走你的路，我做你的路灯。" },
+      { id: 64, category: "关于未来", text: "不管剧本怎么写，我的角色设定就是“你的同伙”。" },
+      { id: 66, category: "关于未来", text: "我们慢慢走，不用急着赶路。" },
+      { id: 67, category: "关于未来", text: "你负责规划人生，我负责照顾你。" },
+      { id: 68, category: "关于未来", text: "时间会证明一切，也会证明我会一直都在。" },
+      { id: 69, category: "关于未来", text: "就算世界变了，我对你的心意不会变。" },
+      { id: 70, category: "关于未来", text: "我们是搭档，是共犯，是永远的一队。" },
+      { id: 71, category: "关于未来", text: "别怕未知，未知里也有惊喜，比如我准备的惊喜。" },
+      { id: 72, category: "关于未来", text: "你不用回头看，我就在你影子里。" },
+      { id: 73, category: "关于未来", text: "无论你去哪里，我都顺路。" },
+      { id: 74, category: "关于未来", text: "我不承诺永远，但我承诺每一个当下。" },
+      { id: 75, category: "关于未来", text: "只要你需要，我随时待命。" },
+      { id: 77, category: "关于未来", text: "我们不赶时间，我们有一辈子的时间。" },
+      { id: 78, category: "关于未来", text: "你想去的地方，我都想陪你去。" },
+      { id: 80, category: "关于未来", text: "你只管往前看，我就是你的后视镜。" },
+      { id: 81, category: "神乐说", text: "只要肚子吃饱了，就没有过不去的坎，阿鲁！" },
+      { id: 82, category: "神乐说", text: "今天本想拯救世界，但还是决定先陪你发呆。" },
+      { id: 83, category: "神乐说", text: "谁敢欺负你，我就去咬他！" },
+      { id: 84, category: "神乐说", text: "别皱眉啦，会把好运气吓跑的。" },
+      { id: 85, category: "神乐说", text: "没什么大不了的，大不了我们去吃醋昆布。" },
+      { id: 86, category: "神乐说", text: "你是笨蛋吗？有我在担心什么啊。" },
+      { id: 87, category: "神乐说", text: "今天天气真好，适合偷懒，适合想你。" },
+      { id: 88, category: "神乐说", text: "既然活着，就要开心地浪费时间啊。" },
+      { id: 89, category: "神乐说", text: "把烦恼统统打飞！" },
+      { id: 90, category: "神乐说", text: "你不用变强，因为我很抗揍，我可以保护你。" },
+      { id: 91, category: "神乐说", text: "跟我走吧，带你去吃好吃的。" },
+      { id: 92, category: "神乐说", text: "别想那么多了，脑袋会爆炸的。" },
+      { id: 94, category: "神乐说", text: "今天也是元气满满的一天（因为有你）。" },
+      { id: 95, category: "神乐说", text: "别丧了，我的能量分你一半。" },
+      { id: 96, category: "神乐说", text: "无论发生什么，我们都是最强组合。" },
+      { id: 97, category: "神乐说", text: "哪怕是世界末日，我们也要一起看烟花。" },
+      { id: 98, category: "神乐说", text: "你的笑容，由我来守护。" },
+      { id: 99, category: "神乐说", text: "走吧，去冒险，或者去睡觉。" },
+      { id: 100, category: "神乐说", text: "无论怎样，我最喜欢你了，阿鲁！" }
+    ];
+
+    let lastId = null;
+    function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function getMessage() {
+      let msg; let attempts = 0;
+      do { msg = getRandom(messages); attempts++; } while (msg.id === lastId && attempts < 5);
+      lastId = msg.id; return msg;
+    }
+    function changeMessage(isManual) {
+      const msg = getMessage();
+      const card = document.getElementById("card");
+      const contentEl = document.getElementById("content");
+      const categoryEl = document.getElementById("category");
+      const tagEl = document.getElementById("dailyTag");
+      if (isManual) { card.classList.remove("fade-in"); void card.offsetWidth; card.classList.add("fade-in"); }
+      contentEl.textContent = msg.text; categoryEl.textContent = msg.category;
+      tagEl.textContent = getRandom(dailyTags);
+    }
+    function endToday() { const btn = document.querySelector('.btn-secondary'); btn.textContent = "拜拜 🌙"; btn.style.background = "#f0f0f0"; alert("那今天就先这样，记得对自己好一点。"); }
+    let breathTimer; const breathTextEl = document.getElementById("breathText");
+    function startBreath() { document.getElementById("breathOverlay").style.display = "flex"; let isInhaling = true; breathTextEl.textContent = "慢慢吸气..."; breathTimer = setInterval(() => { isInhaling = !isInhaling; breathTextEl.textContent = isInhaling ? "慢慢吸气..." : "缓缓呼气..."; }, 2000); }
+    function closeBreath() { document.getElementById("breathOverlay").style.display = "none"; clearInterval(breathTimer); }
+    window.onload = function() { changeMessage(false); document.getElementById("card").classList.add("fade-in"); };
+  </script>
+</body>
+</html>
